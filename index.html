@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Campos de Visão — Diagrama de Assentos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0A0E14;
+    --panel: #10161F;
+    --panel-2: #141B26;
+    --grid: #1E2733;
+    --border: #26313F;
+    --text: #E8EDF2;
+    --text-dim: #8291A3;
+    --amber: #FFB454;
+    --s3: #4FD1C5;
+    --s4: #7C9EFF;
+    --s5: #FFB454;
+    --s6: #FF6B9D;
+    --s7: #B892FF;
+    --s8: #7CFFB2;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background: radial-gradient(ellipse at 50% 0%, #0F151F 0%, var(--bg) 60%);
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    min-height: 100vh;
+    padding: 32px 20px 60px;
+  }
+  .wrap{ max-width: 1180px; margin: 0 auto; }
+
+  header{ margin-bottom: 28px; }
+  header h1{
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+  }
+  header p{
+    color: var(--text-dim);
+    font-size: 14.5px;
+    margin-top: 6px;
+    max-width: 640px;
+    line-height: 1.55;
+  }
+
+  .layout{
+    display: grid;
+    grid-template-columns: minmax(0,1fr) 340px;
+    gap: 24px;
+    align-items: start;
+  }
+  @media (max-width: 860px){
+    .layout{ grid-template-columns: 1fr; }
+  }
+
+  .stage{
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    display:flex;
+    flex-direction: column;
+    align-items:center;
+  }
+  .stage-top{
+    width:100%;
+    display:flex;
+    justify-content: space-between;
+    align-items:center;
+    margin-bottom: 8px;
+  }
+  .stage-top .label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    color: var(--text-dim);
+    letter-spacing: 0.4px;
+  }
+  .actions{ display:flex; gap:8px; }
+  .actions button{
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family:'Space Grotesk', sans-serif;
+    font-size: 12.5px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: border-color .15s ease, background .15s ease;
+  }
+  .actions button:hover{ border-color: var(--amber); }
+
+  svg{ width: 100%; height: auto; max-width: 640px; }
+
+  .wedge{ transition: opacity .18s ease; cursor: pointer; }
+  .wedge.dim{ opacity: 0.08 !important; }
+  .rim-tick{ stroke: var(--grid); stroke-width: 1; }
+  .rim-tick.major{ stroke: #33404F; }
+  .deg-label{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10.5px;
+    fill: var(--text-dim);
+  }
+  .compass-label{
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 12.5px;
+    fill: var(--text);
+    letter-spacing: 0.5px;
+  }
+  .heli-canopy{ fill: #1E2A38; stroke: #3A4B5E; stroke-width: 1.5; }
+  .heli-boom{ fill: #1A2330; stroke: #2E3B4C; stroke-width: 1; }
+  .heli-fin{ fill: #1E2A38; stroke: #3A4B5E; stroke-width: 1.2; }
+  .heli-skid{ stroke: #3A4B5E; stroke-width: 2; stroke-linecap: round; }
+  .heli-strut{ stroke: #2E3B4C; stroke-width: 1.3; }
+  .heli-rotor-disc{ fill: none; stroke: #2E3B4C; stroke-width: 1; stroke-dasharray: 3 4; opacity: 0.55; }
+  .heli-rotor-blade{ stroke: #3A4B5E; stroke-width: 2; stroke-linecap: round; }
+  .heli-hub{ fill: var(--amber); }
+  .heli-nose-mark{ fill: var(--amber); }
+
+  .legend{
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+  }
+  .legend h2{
+    font-size: 13px;
+    color: var(--text-dim);
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    margin-bottom: 14px;
+    font-family:'IBM Plex Mono', monospace;
+  }
+  .seat-row{
+    display:flex;
+    align-items:flex-start;
+    gap: 10px;
+    padding: 10px 8px;
+    border-radius: 7px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: background .15s ease, border-color .15s ease;
+  }
+  .seat-row:hover{ background: var(--panel-2); }
+  .seat-row.active{ background: var(--panel-2); border-color: var(--border); }
+  .swatch{
+    width: 13px; height: 13px;
+    border-radius: 3px;
+    margin-top: 3px;
+    flex-shrink: 0;
+  }
+  .seat-info{ flex:1; }
+  .seat-info .top-line{
+    display:flex; align-items:baseline; gap: 8px;
+  }
+  .seat-info .name{ font-size: 14.5px; font-weight: 600; }
+  .seat-info .type{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 10.5px;
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    padding: 1px 6px;
+    border-radius: 10px;
+  }
+  .seat-info .type.external{ color:var(--amber); border-color:#76552D; }
+  .seat-info .range{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 3px;
+  }
+  .seat-info .note{
+    font-size: 11.5px;
+    color: #5C6A7B;
+    margin-top: 3px;
+    line-height: 1.4;
+  }
+  input[type=checkbox]{
+    accent-color: var(--amber);
+    width: 15px; height: 15px;
+    margin-top: 4px;
+    cursor: pointer;
+    flex-shrink:0;
+  }
+
+  .assumptions{
+    margin-top: 22px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 22px;
+  }
+  .assumptions h2{
+    font-size: 15px;
+    margin-bottom: 10px;
+  }
+  .assumptions ul{
+    padding-left: 18px;
+    color: var(--text-dim);
+    font-size: 13.5px;
+    line-height: 1.8;
+  }
+  .assumptions li b{ color: var(--text); font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>Campos de visão por assento</h1>
+    <p>Diagrama de topo do helicóptero numa circunferência de 360°. Bico (nariz) em 0°, cauda em 180°, ângulos crescendo em sentido horário — direita a 90°, esquerda a 270°.</p>
+  </header>
+
+  <div class="layout">
+
+    <div class="stage">
+      <div class="stage-top">
+        <span class="label">VISTA SUPERIOR · 000°–360°</span>
+        <div class="actions">
+          <button id="btn-all">mostrar todos</button>
+          <button id="btn-none">ocultar todos</button>
+        </div>
+      </div>
+      <svg id="diagram" viewBox="0 0 640 640"></svg>
+    </div>
+
+    <div class="legend">
+      <h2>ASSENTOS</h2>
+      <div id="seat-list"></div>
+    </div>
+
+  </div>
+
+  <div class="assumptions">
+    <h2>Lógica aplicada e premissas assumidas</h2>
+    <ul>
+      <li><b>Sistema de ângulos:</b> 0° = bico, 90° = lateral direita, 180° = cauda, 270° = lateral esquerda — sentido horário, visto de cima.</li>
+      <li><b>Assentos 3, 4, 5 e 6</b> são assentos externos na configuração representada. A posição física exata de cada assento pode ser ajustada sem alterar os campos de visão.</li>
+      <li><b>Assento 3</b> usa a faixa informada de 270°→000° e é do tipo <b>3ª pessoa</b>; <b>assento 4</b> usa a faixa 000°→075° e é do tipo <b>1ª pessoa</b>.</li>
+      <li><b>Assentos 5 e 7</b> usam a faixa informada diretamente (150°–230° e 180°–320°).</li>
+      <li><b>Assento 6</b> (3ª pessoa) usa a faixa 90°–220°.</li>
+      <li><b>Assento 8</b> ("180 completo", 3ª pessoa): interpretei como uma câmera externa referenciada na cauda (180°) com giro livre de 360° — por isso é desenhada como um anel tracejado completo, não uma cunha.</li>
+      <li><b>1ª pessoa</b> (tipo 1) é desenhada como cunha sólida preenchida; <b>3ª pessoa</b> (tipo 3) como cunha com contorno tracejado, para diferenciar visualmente o tipo de câmera.</li>
+    </ul>
+  </div>
+
+</div>
+
+<script>
+const CX = 320, CY = 320, R = 240;
+
+// seat data: [seat, viewType(1|3), start, end, assumed?, external?, note]
+const seats = [
+  { id: 3, type: 3, start: 270,   end: 0,    color: 'var(--s3)', varName:'--s3', assumed: false, external: true, note: 'Assento externo.' },
+  { id: 4, type: 1, start: 0,     end: 75,   color: 'var(--s4)', varName:'--s4', assumed: false, external: true, note: 'Assento externo.' },
+  { id: 5, type: 1, start: 150,   end: 230,  color: 'var(--s5)', varName:'--s5', assumed: false, external: true, note: 'Assento externo.' },
+  { id: 6, type: 3, start: 90,    end: 220,  color: 'var(--s6)', varName:'--s6', assumed: false, external: true, note: 'Assento externo.' },
+  { id: 7, type: 1, start: 180,   end: 320,  color: 'var(--s7)', varName:'--s7', assumed: false, note: '' },
+  { id: 8, type: 3, start: 0,     end: 360,  color: 'var(--s8)', varName:'--s8', assumed: true,  note: '"180 completo" — assumido como câmera livre 360°, referência na cauda.' },
+];
+
+function norm(deg){ return ((deg % 360) + 360) % 360; }
+
+function toXY(deg, radius){
+  const rad = (deg - 0) * Math.PI / 180;
+  return {
+    x: CX + radius * Math.sin(rad),
+    y: CY - radius * Math.cos(rad)
+  };
+}
+
+function wedgePath(start, end, radius){
+  const s = norm(start), e = norm(end);
+  let span = e - s; if (span <= 0) span += 360;
+  const large = span > 180 ? 1 : 0;
+  const p1 = toXY(s, radius), p2 = toXY(e, radius);
+  return `M ${CX},${CY} L ${p1.x.toFixed(2)},${p1.y.toFixed(2)} A ${radius},${radius} 0 ${large} 1 ${p2.x.toFixed(2)},${p2.y.toFixed(2)} Z`;
+}
+
+const svg = document.getElementById('diagram');
+let svgHTML = '';
+
+// background rings + ticks
+svgHTML += `<circle cx="${CX}" cy="${CY}" r="${R}" fill="none" class="rim-tick major"/>`;
+svgHTML += `<circle cx="${CX}" cy="${CY}" r="${R*0.66}" fill="none" class="rim-tick"/>`;
+svgHTML += `<circle cx="${CX}" cy="${CY}" r="${R*0.33}" fill="none" class="rim-tick"/>`;
+
+for (let d = 0; d < 360; d += 15){
+  const major = d % 90 === 0;
+  const p1 = toXY(d, major ? R+2 : R-6);
+  const p2 = toXY(d, R+2);
+  svgHTML += `<line x1="${p1.x.toFixed(2)}" y1="${p1.y.toFixed(2)}" x2="${p2.x.toFixed(2)}" y2="${p2.y.toFixed(2)}" class="rim-tick${major?' major':''}"/>`;
+  if (d % 30 === 0 && !major){
+    const lp = toXY(d, R+18);
+    svgHTML += `<text x="${lp.x.toFixed(2)}" y="${lp.y.toFixed(2)}" text-anchor="middle" dominant-baseline="middle" class="deg-label">${d}°</text>`;
+  }
+}
+
+// wedges (drawn before compass labels/heli so ticks stay on top)
+seats.forEach(s => {
+  if (s.id === 8){
+    svgHTML += `<circle id="wedge-8" class="wedge" cx="${CX}" cy="${CY}" r="${R*0.9}" fill="none" stroke="${s.color}" stroke-width="4" stroke-dasharray="10 8" opacity="0.85"/>`;
+  } else {
+    const path = wedgePath(s.start, s.end, R*0.92);
+    const dash = s.type === 3 ? `stroke="${s.color}" stroke-width="2.5" stroke-dasharray="7 5"` : `stroke="${s.color}" stroke-width="2"`;
+    svgHTML += `<path id="wedge-${s.id}" class="wedge" d="${path}" fill="${s.color}" fill-opacity="${s.type===3?0.14:0.22}" ${dash} />`;
+  }
+});
+
+// compass labels
+const compassPts = [
+  {d:0, t:'BICO 000°'}, {d:90, t:'090°'}, {d:180, t:'CAUDA 180°'}, {d:270, t:'270°'}
+];
+compassPts.forEach(c => {
+  const lp = toXY(c.d, R+40);
+  svgHTML += `<text x="${lp.x.toFixed(2)}" y="${lp.y.toFixed(2)}" text-anchor="middle" dominant-baseline="middle" class="compass-label">${c.t}</text>`;
+});
+
+// Little Bird / MH-6 style silhouette, top-down, nose pointing to 0deg (up)
+const hubY = CY - 18;
+svgHTML += `
+  <g>
+    <!-- rotor disc and four-blade main rotor -->
+    <circle cx="${CX}" cy="${hubY}" r="78" class="heli-rotor-disc"/>
+    <line x1="${CX-78}" y1="${hubY}" x2="${CX+78}" y2="${hubY}" class="heli-rotor-blade" transform="rotate(18 ${CX} ${hubY})"/>
+    <line x1="${CX}" y1="${hubY-78}" x2="${CX}" y2="${hubY+78}" class="heli-rotor-blade" transform="rotate(18 ${CX} ${hubY})"/>
+
+    <!-- characteristic landing skids -->
+    <line x1="${CX-27}" y1="${CY-22}" x2="${CX-27}" y2="${CY+59}" class="heli-skid"/>
+    <line x1="${CX+27}" y1="${CY-22}" x2="${CX+27}" y2="${CY+59}" class="heli-skid"/>
+    <line x1="${CX-10}" y1="${CY-20}" x2="${CX-27}" y2="${CY-25}" class="heli-strut"/>
+    <line x1="${CX+10}" y1="${CY-20}" x2="${CX+27}" y2="${CY-25}" class="heli-strut"/>
+    <line x1="${CX-10}" y1="${CY+35}" x2="${CX-27}" y2="${CY+43}" class="heli-strut"/>
+    <line x1="${CX+10}" y1="${CY+35}" x2="${CX+27}" y2="${CY+43}" class="heli-strut"/>
+
+    <!-- compact fuselage and tapered tail boom -->
+    <path d="M ${CX},${CY-69}
+             C ${CX+25},${CY-62} ${CX+29},${CY-28} ${CX+17},${CY-8}
+             L ${CX+6},${CY+16} L ${CX+4},${CY+91}
+             L ${CX-4},${CY+91} L ${CX-6},${CY+16} L ${CX-17},${CY-8}
+             C ${CX-29},${CY-28} ${CX-25},${CY-62} ${CX},${CY-69} Z" class="heli-boom"/>
+
+    <!-- horizontal stabilizer and tail fin -->
+    <path d="M ${CX-18},${CY+72} L ${CX-33},${CY+80} L ${CX-17},${CY+82} M ${CX+18},${CY+72} L ${CX+33},${CY+80} L ${CX+17},${CY+82}" class="heli-fin" fill="none"/>
+    <path d="M ${CX-3},${CY+68} L ${CX-3},${CY+98} L ${CX+10},${CY+90} Z" class="heli-fin"/>
+
+    <!-- tail rotor -->
+    <line x1="${CX+8}" y1="${CY+78}" x2="${CX+8}" y2="${CY+96}" stroke="#3A4B5E" stroke-width="2" stroke-linecap="round"/>
+    <line x1="${CX+1}" y1="${CY+87}" x2="${CX+15}" y2="${CY+87}" stroke="#3A4B5E" stroke-width="2" stroke-linecap="round"/>
+
+    <!-- two-seat bubble canopy -->
+    <path d="M ${CX},${CY-64}
+             C ${CX+22},${CY-57} ${CX+20},${CY-24} ${CX+12},${CY-7}
+             L ${CX-12},${CY-7}
+             C ${CX-20},${CY-24} ${CX-22},${CY-57} ${CX},${CY-64} Z" class="heli-canopy"/>
+    <line x1="${CX}" y1="${CY-57}" x2="${CX}" y2="${CY-10}" stroke="#3A4B5E" stroke-width="1"/>
+
+    <!-- main rotor hub -->
+    <circle cx="${CX}" cy="${hubY}" r="3" class="heli-hub"/>
+
+    <!-- nose marker -->
+    <polygon points="${CX},${CY-70} ${CX-6},${CY-58} ${CX+6},${CY-58}" class="heli-nose-mark"/>
+  </g>
+`;
+
+svg.innerHTML = svgHTML;
+
+// resolve CSS var colors for JS-side use in legend swatches (kept as var(--sX), fine inline)
+
+// legend
+const list = document.getElementById('seat-list');
+seats.forEach(s => {
+  const row = document.createElement('div');
+  row.className = 'seat-row active';
+  row.dataset.seat = s.id;
+  const rangeText = s.id === 8 ? '000°–360° (livre)' : `${norm(s.start).toFixed(s.assumed?1:0)}°–${norm(s.end).toFixed(s.assumed?1:0)}°`;
+  row.innerHTML = `
+    <input type="checkbox" checked data-seat="${s.id}"/>
+    <span class="swatch" style="background:${s.color}"></span>
+    <div class="seat-info">
+      <div class="top-line">
+        <span class="name">Assento ${s.id}</span>
+        <span class="type">${s.type === 1 ? '1ª pessoa' : '3ª pessoa'}</span>
+        ${s.external ? '<span class="type external">externo</span>' : ''}
+      </div>
+      <div class="range">${rangeText}</div>
+      ${s.note ? `<div class="note">${s.note}</div>` : ''}
+    </div>
+  `;
+  list.appendChild(row);
+});
+
+function setVisible(id, visible){
+  const el = document.getElementById('wedge-' + id);
+  if (el) el.style.display = visible ? '' : 'none';
+  const cb = document.querySelector(`input[data-seat="${id}"]`);
+  if (cb) cb.checked = visible;
+  const row = document.querySelector(`.seat-row[data-seat="${id}"]`);
+  if (row) row.classList.toggle('active', visible);
+}
+
+list.addEventListener('click', (e) => {
+  if (e.target.tagName === 'INPUT') return;
+  const row = e.target.closest('.seat-row');
+  if (!row) return;
+  const id = row.dataset.seat;
+  const cb = document.querySelector(`input[data-seat="${id}"]`);
+  setVisible(id, !cb.checked);
+});
+list.addEventListener('change', (e) => {
+  if (e.target.tagName !== 'INPUT') return;
+  setVisible(e.target.dataset.seat, e.target.checked);
+});
+
+document.getElementById('btn-all').addEventListener('click', () => {
+  seats.forEach(s => setVisible(s.id, true));
+});
+document.getElementById('btn-none').addEventListener('click', () => {
+  seats.forEach(s => setVisible(s.id, false));
+});
+
+// hover highlight: dim others
+list.addEventListener('mouseover', (e) => {
+  const row = e.target.closest('.seat-row');
+  if (!row) return;
+  const id = row.dataset.seat;
+  seats.forEach(s => {
+    const el = document.getElementById('wedge-' + s.id);
+    if (el) el.classList.toggle('dim', String(s.id) !== id);
+  });
+});
+list.addEventListener('mouseout', (e) => {
+  const row = e.target.closest('.seat-row');
+  if (!row) return;
+  seats.forEach(s => {
+    const el = document.getElementById('wedge-' + s.id);
+    if (el) el.classList.remove('dim');
+  });
+});
+</script>
+</body>
+</html>
